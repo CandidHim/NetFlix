@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix - Netflix Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-gradient {
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%);
+        }
+        .card:hover {
+            transform: scale(1.1) translateY(-10px);
+            z-index: 10;
+        }
+        .card-overlay {
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .card:hover .card-overlay {
+            opacity: 1;
+        }
+        .nav-scrolled {
+            background-color: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .video-player {
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .video-player.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .genre-tag {
+            transition: all 0.2s ease;
+        }
+        .genre-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
+    <!-- Navigation -->
+    <nav id="main-nav" class="fixed w-full z-50 py-4 px-6 md:px-12 flex justify-between items-center transition-all duration-300">
+        <div class="flex items-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="StreamFlix" class="h-6 md:h-8">
+            <div class="ml-8 hidden md:flex space-x-6">
+                <a href="#" class="hover:text-gray-300 transition">Home</a>
+                <a href="#" class="hover:text-gray-300 transition">TV Shows</a>
+                <a href="#" class="hover:text-gray-300 transition">Movies</a>
+                <a href="#" class="hover:text-gray-300 transition">New & Popular</a>
+                <a href="#" class="hover:text-gray-300 transition">My List</a>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="relative group">
+                <button class="p-2 rounded-full hover:bg-gray-800 transition">
+                    <i class="fas fa-search text-lg"></i>
+                </button>
+                <div class="absolute right-0 mt-2 w-64 bg-gray-900 rounded-md shadow-lg p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <input type="text" placeholder="Search..." class="w-full bg-gray-800 text-white px-3 py-2 rounded focus:outline-none">
+                </div>
+            </div>
+            <div class="relative group">
+                <button class="p-2 rounded-full hover:bg-gray-800 transition">
+                    <i class="fas fa-bell text-lg"></i>
+                </button>
+                <div class="absolute right-0 mt-2 w-72 bg-gray-900 rounded-md shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <h3 class="font-semibold mb-2">Notifications</h3>
+                    <div class="text-sm text-gray-400">No new notifications</div>
+                </div>
+            </div>
+            <div class="relative group">
+                <button class="flex items-center space-x-2 group">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile" class="h-8 w-8 rounded">
+                    <i class="fas fa-caret-down text-gray-400 group-hover:text-white transition"></i>
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-800 transition">Account</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-800 transition">Help Center</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-800 transition">Sign out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative h-screen flex items-center justify-center">
+        <div class="absolute inset-0 overflow-hidden">
+            <img src="https://image.tmdb.org/t/p/original/9dTO2RygcDT0cQkawABw4QkDegN.jpg" alt="Hero Background" class="w-full h-full object-cover">
+            <div class="absolute inset-0 hero-gradient"></div>
+        </div>
+        
+        <div class="relative z-10 px-8 text-center max-w-4xl">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-4">Stranger Things</h1>
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+                <span class="genre-tag bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Sci-Fi</span>
+                <span class="genre-tag bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Horror</span>
+                <span class="genre-tag bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Drama</span>
+                <span class="genre-tag bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Mystery</span>
+            </div>
+            <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="play-hero" class="bg-white text-black px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:bg-opacity-80 transition font-semibold transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-play"></i>
+                    <span>Play</span>
+                </button>
+                <button class="bg-gray-600 bg-opacity-70 px-8 py-3 rounded-full flex items-center justify-center space-x-2 hover:bg-opacity-50 transition font-semibold transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-info-circle"></i>
+                    <span>More Info</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Player Modal -->
+    <div id="video-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 opacity-0 invisible transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl mx-4">
+            <button id="close-video" class="absolute -top-12 right-0 text-white text-3xl hover:text-red-500 transition">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="video-player bg-black rounded-lg overflow-hidden">
+                <iframe id="video-frame" class="w-full aspect-video" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="mt-4 text-white">
+                <h2 class="text-2xl font-bold" id="video-title">Stranger Things</h2>
+                <div class="flex items-center mt-2">
+                    <div class="w-12 h-12 mr-3">
+                        <svg class="progress-ring" width="48" height="48">
+                            <circle class="progress-ring__circle" stroke="#E50914" stroke-width="4" fill="transparent" r="20" cx="24" cy="24"/>
+                        </svg>
+                        <span class="absolute inset-0 flex items-center justify-center text-xs font-bold">85%</span>
+                    </div>
+                    <span class="text-sm text-gray-400">Match: 85%</span>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <button class="flex items-center space-x-2 text-sm hover:text-red-500 transition">
+                        <i class="far fa-thumbs-up"></i>
+                        <span>Like</span>
+                    </button>
+                    <button class="flex items-center space-x-2 text-sm hover:text-red-500 transition">
+                        <i class="far fa-comment"></i>
+                        <span>Comments</span>
+                    </button>
+                    <button class="flex items-center space-x-2 text-sm hover:text-red-500 transition">
+                        <i class="fas fa-share"></i>
+                        <span>Share</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Rows -->
+    <div class="relative z-20 pb-20 -mt-20">
+        <!-- Continue Watching -->
+        <section class="mb-12 px-6 md:px-12">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">Continue Watching</h2>
+            <div class="relative group">
+                <div class="grid grid-flow-col auto-cols-max gap-4 overflow-x-auto pb-6 scrollbar-hide" id="continue-row">
+                    <!-- Cards will be added by JavaScript -->
+                </div>
+                <button class="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-l from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('continue-row', 300)">
+                    <i class="fas fa-chevron-right text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+                <button class="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-r from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('continue-row', -300)">
+                    <i class="fas fa-chevron-left text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Trending Now -->
+        <section class="mb-12 px-6 md:px-12">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">Trending Now</h2>
+            <div class="relative group">
+                <div class="grid grid-flow-col auto-cols-max gap-4 overflow-x-auto pb-6 scrollbar-hide" id="trending-row">
+                    <!-- Cards will be added by JavaScript -->
+                </div>
+                <button class="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-l from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('trending-row', 300)">
+                    <i class="fas fa-chevron-right text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+                <button class="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-r from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('trending-row', -300)">
+                    <i class="fas fa-chevron-left text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Popular on StreamFlix -->
+        <section class="mb-12 px-6 md:px-12">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">Popular on StreamFlix</h2>
+            <div class="relative group">
+                <div class="grid grid-flow-col auto-cols-max gap-4 overflow-x-auto pb-6 scrollbar-hide" id="popular-row">
+                    <!-- Cards will be added by JavaScript -->
+                </div>
+                <button class="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-l from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('popular-row', 300)">
+                    <i class="fas fa-chevron-right text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+                <button class="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-r from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('popular-row', -300)">
+                    <i class="fas fa-chevron-left text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- My List -->
+        <section class="mb-12 px-6 md:px-12">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">My List</h2>
+            <div class="relative group">
+                <div class="grid grid-flow-col auto-cols-max gap-4 overflow-x-auto pb-6 scrollbar-hide" id="mylist-row">
+                    <!-- Cards will be added by JavaScript -->
+                </div>
+                <button class="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-l from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('mylist-row', 300)">
+                    <i class="fas fa-chevron-right text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+                <button class="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center bg-gradient-to-r from-black to-transparent opacity-0 group-hover:opacity-100 transition z-10" onclick="scrollRow('mylist-row', -300)">
+                    <i class="fas fa-chevron-left text-3xl text-white bg-gray-900 bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"></i>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black text-gray-400 py-12 px-6 md:px-12">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between mb-8">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center mb-4">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="StreamFlix" class="h-6 mr-4">
+                        <div class="flex space-x-4">
+                            <a href="#" class="hover:text-white transition"><i class="fab fa-facebook"></i></a>
+                            <a href="#" class="hover:text-white transition"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="hover:text-white transition"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="hover:text-white transition"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-sm">
+                        <p>© 2023 StreamFlix Clone. All rights reserved.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-white font-semibold mb-3">Company</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-white transition">About Us</a></li>
+                            <li><a href="#" class="hover:text-white transition">Jobs</a></li>
+                            <li><a href="#" class="hover:text-white transition">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-semibold mb-3">Support</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+                            <li><a href="#" class="hover:text-white transition">Help Center</a></li>
+                            <li><a href="#" class="hover:text-white transition">Terms of Use</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-semibold mb-3">Legal</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+                            <li><a href="#" class="hover:text-white transition">Cookie Preferences</a></li>
+                            <li><a href="#" class="hover:text-white transition">Corporate Information</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-sm">
+                <p>StreamFlix is a fictional streaming service created for demonstration purposes only.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Google Drive video files (replace with your own Google Drive share links)
+        const videoFiles = {
+            "Stranger Things": "https://drive.google.com/file/d/1dQ4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4/preview",
+            "The Witcher": "https://drive.google.com/file/d/2dQ4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4/preview",
+            "Money Heist": "https://drive.google.com/file/d/3dQ4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4/preview",
+            "The Queen's Gambit": "https://drive.google.com/file/d/4dQ4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4/preview",
+            "Breaking Bad": "https://drive.google.com/file/d/5dQ4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4Z4/preview"
+        };
+
+        // Sample data for content rows
+        const trendingContent = [
+            { id: 1, title: "The Witcher", image: "https://image.tmdb.org/t/p/w500/8WUVHemHFH2ZIP6NWkwlHWsyrEL.jpg", progress: 0, match: 92 },
+            { id: 2, title: "Money Heist", image: "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg", progress: 0, match: 87 },
+            { id: 3, title: "The Queen's Gambit", image: "https://image.tmdb.org/t/p/w500/zU0htwkhNvBQdVSIKB9s6hgVeFK.jpg", progress: 0, match: 95 },
+            { id: 4, title: "Dark", image: "https://image.tmdb.org/t/p/w500/5LoHuHWA4H8jElFlZDxMqB6uCc4.jpg", progress: 0, match: 89 },
+            { id: 5, title: "Breaking Bad", image: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", progress: 0, match: 97 },
+            { id: 6, title: "Peaky Blinders", image: "https://image.tmdb.org/t/p/w500/6PX0r5TRRU5y0jZ70G1ZGweKBYm.jpg", progress: 0, match: 84 },
+            { id: 7, title: "The Crown", image: "https://image.tmdb.org/t/p/w500/jJ7Wh8bqRnZPZ63QnmQnZf5dbDn.jpg", progress: 0, match: 91 },
+            { id: 8, title: "Narcos", image: "https://image.tmdb.org/t/p/w500/7u3pxc0K1wx32IleAkLv78MKgrw.jpg", progress: 0, match: 88 },
+            { id: 9, title: "The Mandalorian", image: "https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg", progress: 0, match: 93 },
+            { id: 10, title: "Ozark", image: "https://image.tmdb.org/t/p/w500/oyqFQKvBfD0XQlK44ZfRsVAU0gO.jpg", progress: 0, match: 90 }
+        ];
+
+        const popularContent = [
+            { id: 11, title: "Squid Game", image: "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", progress: 30, match: 96 },
+            { id: 12, title: "Bridgerton", image: "https://image.tmdb.org/t/p/w500/ke8vWZqZ8xrKoYzx8YZ9QqVKqQQ.jpg", progress: 45, match: 83 },
+            { id: 13, title: "Lupin", image: "https://image.tmdb.org/t/p/w500/7ghWJDyyQN5y8YQhD6YcNEEmZ2U.jpg", progress: 60, match: 85 },
+            { id: 14, title: "The Boys", image: "https://image.tmdb.org/t/p/w500/stTEycfG9928HYGEISBFaG1ngjM.jpg", progress: 25, match: 94 },
+            { id: 15, title: "Stranger Things", image: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", progress: 75, match: 98 },
+            { id: 16, title: "The Umbrella Academy", image: "https://image.tmdb.org/t/p/w500/scZlQQYnDVlnpxFTxaIv2g0Ue4i.jpg", progress: 15, match: 86 },
+            { id: 17, title: "You", image: "https://image.tmdb.org/t/p/w500/5qhtTPWNqzM20eoY5kXJ8e3aqVj.jpg", progress: 90, match: 82 },
+            { id: 18, title: "Outer Banks", image: "https://image.tmdb.org/t/p/w500/1otvJscN7xqXZRhnSDyZ4PbhddU.jpg", progress: 10, match: 81 },
+            { id: 19, title: "Emily in Paris", image: "https://image.tmdb.org/t/p/w500/7ZP8Kdg5zXeqvGcOMj9Qe6QEUXm.jpg", progress: 50, match: 79 },
+            { id: 20, title: "The Last of Us", image: "https://image.tmdb.org/t/p/w500/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg", progress: 20, match: 99 }
+        ];
+
+        const continueContent = [
+            { id: 21, title: "Wednesday", image: "https://image.tmdb.org/t/p/w500/jeGtaMwGxPmQN5xM4ClnwPQcNQz.jpg", progress: 65, match: 93 },
+            { id: 22, title: "All of Us Are Dead", image: "https://image.tmdb.org/t/p/w500/l0U4mN2T2fGCJmQl0tPNEp1brQf.jpg", progress: 40, match: 87 },
+            { id: 23, title: "The Sandman", image: "https://image.tmdb.org/t/p/w500/q54qEgagGOYCq5D1903eBVMNkbo.jpg", progress: 55, match: 91 },
+            { id: 24, title: "House of the Dragon", image: "https://image.tmdb.org/t/p/w500/z2yahl2uefxDCl0nogcRBstwruJ.jpg", progress: 80, match: 95 },
+            { id: 25, title: "The Bear", image: "https://image.tmdb.org/t/p/w500/fd7eD7mXkU98hnEbSqAfvJ1nSwZ.jpg", progress: 30, match: 89 },
+            { id: 26, title: "Dahmer", image: "https://image.tmdb.org/t/p/w500/1Ocb9v3h54beGVoJMm4w50UQhLf.jpg", progress: 70, match: 84 },
+            { id: 27, title: "The Lincoln Lawyer", image: "https://image.tmdb.org/t/p/w500/9WlJFhOSCPnaaSg3WJmFMY60Pvs.jpg", progress: 25, match: 88 },
+            { id: 28, title: "Inventing Anna", image: "https://image.tmdb.org/t/p/w500/piuRhGi5hBdfndBDrjv5sT2ZJeM.jpg", progress: 45, match: 82 },
+            { id: 29, title: "The Watcher", image: "https://image.tmdb.org/t/p/w500/6Z9gKqNAGk0xZFWjzUce7NNjhcZ.jpg", progress: 15, match: 80 },
+            { id: 30, title: "1899", image: "https://image.tmdb.org/t/p/w500/7tBQ4xBHW6zQeQvX7z5c3x9YwJm.jpg", progress: 5, match: 86 }
+        ];
+
+        const myListContent = [
+            { id: 31, title: "Breaking Bad", image: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", progress: 0, match: 97 },
+            { id: 32, title: "Dark", image: "https://image.tmdb.org/t/p/w500/5LoHuHWA4H8jElFlZDxMqB6uCc4.jpg", progress: 0, match: 89 },
+            { id: 33, title: "The Queen's Gambit", image: "https://image.tmdb.org/t/p/w500/zU0htwkhNvBQdVSIKB9s6hgVeFK.jpg", progress: 0, match: 95 },
+            { id: 34, title: "Stranger Things", image: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", progress: 0, match: 98 },
+            { id: 35, title: "The Witcher", image: "https://image.tmdb.org/t/p/w500/8WUVHemHFH2ZIP6NWkwlHWsyrEL.jpg", progress: 0, match: 92 },
+            { id: 36, title: "Peaky Blinders", image: "https://image.tmdb.org/t/p/w500/6PX0r5TRRU5y0jZ70G1ZGweKBYm.jpg", progress: 0, match: 84 }
+        ];
+
+        // Function to create content cards
+        function createCard(content, rowId) {
+            const row = document.getElementById(rowId);
+            
+            content.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card relative w-48 h-28 md:w-56 md:h-32 lg:w-64 lg:h-36 rounded overflow-hidden cursor-pointer transition-all duration-300 transform hover:z-10';
+                card.style.flex = '0 0 auto';
+                card.setAttribute('data-title', item.title);
+                card.setAttribute('data-match', item.match);
+                
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
+                    <div class="card-overlay absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-end p-4">
+                        <h3 class="text-sm md:text-base font-semibold">${item.title}</h3>
+                        ${item.progress > 0 ? `
+                        <div class="w-full bg-gray-700 rounded-full h-1 mt-2">
+                            <div class="bg-red-600 h-1 rounded-full" style="width: ${item.progress}%"></div>
+                        </div>
+                        ` : ''}
+                        <div class="flex justify-between mt-3">
+                            <button class="play-btn bg-white text-black rounded-full p-2 hover:bg-opacity-80 transition transform hover:scale-110">
+                                <i class="fas fa-play text-xs"></i>
+                            </button>
+                            <button class="bg-gray-600 bg-opacity-70 rounded-full p-2 hover:bg-opacity-50 transition transform hover:scale-110">
+                                <i class="fas fa-plus text-xs"></i>
+                            </button>
+                            <button class="bg-gray-600 bg-opacity-70 rounded-full p-2 hover:bg-opacity-50 transition transform hover:scale-110">
+                                <i class="far fa-thumbs-up text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                row.appendChild(card);
+            });
+        }
+
+        // Function to scroll content rows
+        function scrollRow(rowId, amount) {
+            const row = document.getElementById(rowId);
+            row.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Function to play video
+        function playVideo(title) {
+            const videoModal = document.getElementById('video-modal');
+            const videoFrame = document.getElementById('video-frame');
+            const videoTitle = document.getElementById('video-title');
+            
+            // Use the Google Drive video URL from our mapping
+            const videoUrl = videoFiles[title] || videoFiles["Stranger Things"]; // Fallback to default
+            
+            videoFrame.src = videoUrl;
+            videoTitle.textContent = title;
+            
+            // Update progress ring
+            const matchPercentage = document.querySelector(`.card[data-title="${title}"]`).getAttribute('data-match');
+            const circle = document.querySelector('.progress-ring__circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference - (matchPercentage / 100) * circumference;
+            
+            // Show modal
+            videoModal.classList.remove('invisible', 'opacity-0');
+            videoModal.classList.add('opacity-100');
+            
+            // Activate video player
+            document.querySelector('.video-player').classList.add('active');
+        }
+
+        // Initialize content rows and event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            createCard(continueContent, 'continue-row');
+            createCard(trendingContent, 'trending-row');
+            createCard(popularContent, 'popular-row');
+            createCard(myListContent, 'mylist-row');
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', function() {
+                const nav = document.getElementById('main-nav');
+                if (window.scrollY > 50) {
+                    nav.classList.add('nav-scrolled');
+                } else {
+                    nav.classList.remove('nav-scrolled');
+                }
+            });
+
+            // Play button in hero section
+            document.getElementById('play-hero').addEventListener('click', function() {
+                playVideo("Stranger Things");
+            });
+
+            // Close video modal
+            document.getElementById('close-video').addEventListener('click', function() {
+                const videoModal = document.getElementById('video-modal');
+                const videoFrame = document.getElementById('video-frame');
+                
+                videoModal.classList.remove('opacity-100');
+                videoModal.classList.add('opacity-0', 'invisible');
+                
+                document.querySelector('.video-player').classList.remove('active');
+                
+                // Pause video when closing
+                videoFrame.src = '';
+            });
+
+            // Play buttons on cards
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('play-btn') || e.target.closest('.play-btn')) {
+                    const card = e.target.closest('.card');
+                    const title = card.getAttribute('data-title');
+                    playVideo(title);
+                }
+            });
+
+            // GSAP animations
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Hero text animation
+            gsap.from(".hero-gradient h1", {
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+
+            gsap.from(".hero-gradient .genre-tag", {
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                delay: 0.3,
+                stagger: 0.1,
+                ease: "back.out"
+            });
+
+            gsap.from(".hero-gradient p", {
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                delay: 0.6,
+                ease: "power3.out"
+            });
+
+            gsap.from(".hero-gradient button", {
+                y: 50,
+                opacity: 0,
+                duration: 0.8,
+                delay: 0.9,
+                stagger: 0.2,
+                ease: "back.out"
+            });
+
+            // Content row animations
+            gsap.utils.toArray("section").forEach((section, i) => {
+                gsap.from(section, {
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 80%",
+                        toggleActions: "play none none none"
+                    },
+                    y: 50,
+                    opacity: 0,
+                    duration: 0.8,
+                    delay: i * 0.1,
+                    ease: "power2.out"
+                });
+            });
+
+            // Card hover animations
+            gsap.utils.toArray(".card").forEach(card => {
+                card.addEventListener("mouseenter", () => {
+                    gsap.to(card.querySelector(".card-overlay"), {
+                        opacity: 1,
+                        duration: 0.3
+                    });
+                });
+                
+                card.addEventListener("mouseleave", () => {
+                    gsap.to(card.querySelector(".card-overlay"), {
+                        opacity: 0,
+                        duration: 0.3
+                    });
+                });
+            });
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=THEAIBRO/netflix" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
